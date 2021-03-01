@@ -38,6 +38,7 @@ class Constants_Engines {
             self::ALTLANG             => self::ALTLANG,
             self::LETSMT              => self::LETSMT,
             self::SMART_MATE          => self::SMART_MATE,
+            self::MMT                 => self::MMT,
             self::YANDEX_TRANSLATE    => self::YANDEX_TRANSLATE,
             self::GOOGLE_TRANSLATE    => self::GOOGLE_TRANSLATE,
             self::GOOGLE_TRANSLATE_V3 => self::GOOGLE_TRANSLATE_V3,

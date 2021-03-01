@@ -64,8 +64,8 @@ class Engines_GoogleTranslateV3 extends Engines_AbstractEngine {
 
     public function get( $_config ) {
 
-        $projectId = $this->projectId;
-        $credentials = $this->credentials;
+        $projectId = $_config['project_id'];
+        $credentials = $_config['credentials'];
 
         $translationClient = new TranslationServiceClient([
                 'credentials' => json_decode($credentials, true)
@@ -77,7 +77,17 @@ class Engines_GoogleTranslateV3 extends Engines_AbstractEngine {
                 TranslationServiceClient::locationName($projectId, 'global')
         );
 
-        return $response->getTranslations();
+        foreach ($response->getTranslations() as $key => $translation) {
+            $googleTranslation = $translation->getTranslatedText();
+        }
+
+        return ( new Engines_Results_MyMemory_Matches(
+                $_config[ 'segment' ],
+                $googleTranslation,
+                100 - $this->getPenalty() . "%",
+                "MT-" . $this->getName(),
+                date( "Y-m-d" )
+        ) )->getMatches();
     }
 
     public function set( $_config ) {

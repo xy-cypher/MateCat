@@ -87,16 +87,14 @@ class Engines_MMT extends Engines_AbstractEngine {
         $_keys = $this->_reMapKeyList( @$_config[ 'keys' ] );
 
         try{
-            throw new Exception("test");
-
-//            $translation = $client->translate( $_config[ 'source' ], $_config[ 'target' ], $_config[ 'segment' ], @$_config[ 'mt_context' ], $_keys, @$_config[ 'job_id' ], static::GET_REQUEST_TIMEOUT );
-//            return ( new Engines_Results_MyMemory_Matches(
-//                    $_config[ 'segment' ],
-//                    $translation[ 'translation' ],
-//                    100 - $this->getPenalty() . "%",
-//                    "MT-" . $this->getName(),
-//                    date( "Y-m-d" )
-//            ) )->getMatches();
+            $translation = $client->translate( $_config[ 'source' ], $_config[ 'target' ], $_config[ 'segment' ], @$_config[ 'mt_context' ], $_keys, @$_config[ 'job_id' ], static::GET_REQUEST_TIMEOUT );
+            return ( new Engines_Results_MyMemory_Matches(
+                    $_config[ 'segment' ],
+                    $translation[ 'translation' ],
+                    100 - $this->getPenalty() . "%",
+                    "MT-" . $this->getName(),
+                    date( "Y-m-d" )
+            ) )->getMatches();
         } catch( Exception $e ){
             return $this->fallback( $_config );
         }
@@ -120,7 +118,7 @@ class Engines_MMT extends Engines_AbstractEngine {
         $gtEngine = Engine::createTempInstance( $newEngineStruct );
 
         /**
-         * @var $gtEngine Engines_GoogleTranslate
+         * @var $gtEngine Engines_GoogleTranslateV3
          */
         return $gtEngine->get( $_config );
 
