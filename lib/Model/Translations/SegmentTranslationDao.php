@@ -235,15 +235,8 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
         ];
 
         $db = Database::obtain();
-        try {
-            $affectedRows = $db->update( 'segment_translations', $data, $where );
-        } catch ( PDOException $e ) {
-            Log::doJsonLog( $e->getMessage() );
 
-            return $e->getCode() * -1;
-        }
-
-        return $affectedRows;
+        return $db->update( 'segment_translations', $data, $where );
     }
 
     /**
@@ -803,8 +796,21 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
                         if ( is_null( $value ) ) {
                             continue;
                         }
-                        $place_holders_fields[] = "$key = ?";
-                        $field_values[]         = $value;
+
+                        // UPDATE ONLY THIS FIELDS
+                        $fields_to_update = [
+                            'translation',
+                            'version_number',
+                            'status',
+                            'translation_date',
+                            'autopropagated_from',
+                            'warning',
+                        ];
+
+                        if(in_array($key, $fields_to_update)){
+                            $place_holders_fields[] = "$key = ?";
+                            $field_values[]         = $value;
+                        }
                     }
 
                     $place_holders_fields = implode( ",", $place_holders_fields );
@@ -859,11 +865,18 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
     }
 
     /**
+     * Select last 10 translated segments in the last hour
+     *
      * @param $id_job
      *
      * @return array|null
+     * @throws Exception
      */
     public static function getLast10TranslatedSegmentIDs( $id_job ) {
+
+        // temporal interval of 1 hour
+        $now = new \DateTime();
+        $limit = new \DateTime('-1 hour');
 
         // Force Index guarantee that the optimizer will not choose translation_date and scan the full table for new jobs.
         $query = "
@@ -871,6 +884,7 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
             FROM segment_translations FORCE INDEX (id_job) 
             WHERE id_job = :id_job
             AND `status` IN ( 'TRANSLATED', 'APPROVED' )
+            AND `translation_date` <= :now AND `translation_date` >= :limit
             ORDER BY translation_date DESC LIMIT 10
 		";
 
@@ -881,7 +895,9 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
             $stmt = $db->getConnection()->prepare( $query );
             $stmt->setFetchMode( PDO::FETCH_ASSOC );
             $stmt->execute( [
-                    'id_job' => $id_job
+                    'id_job' => $id_job,
+                    'limit' => $limit->format('Y-m-d H:i:s'),
+                    'now' => $now->format('Y-m-d H:i:s'),
             ] );
 
             $results = [];
@@ -910,20 +926,14 @@ class Translations_SegmentTranslationDao extends DataAccess_AbstractDao {
          *
          */
         $query = "
-            SELECT SUM(IF(Ifnull(st.eq_word_count, 0) = 0, raw_word_count,
-                   st.eq_word_count)),
-                   Min(translation_date),
-                   Max(translation_date),
-                   IF(Unix_timestamp(Max(translation_date)) - Unix_timestamp(Min(translation_date)) > 3600
-                      OR Count(*) < 10, 0, 1) AS data_validity,
-
-                   Round(SUM(IF(Ifnull(st.eq_word_count, 0) = 0, raw_word_count,
+            SELECT 
+                   Round(SUM(IF(Ifnull(st.eq_word_count, 0) = 0, s.raw_word_count,
                          st.eq_word_count)) /
                                ( Unix_timestamp(Max(translation_date)) -
-                                 Unix_timestamp(Min(translation_date)) ) * 3600) AS words_per_hour,
-                   Count(*)
+                                 Unix_timestamp(Min(translation_date)) ) * 3600) AS words_per_hour
+         
             FROM   segment_translations st
-            JOIN   segments ON id = st.id_segment
+            JOIN   segments s ON id = st.id_segment
             WHERE  status IN ( 'TRANSLATED', 'APPROVED' )
                    AND id_job = ?
                    AND id_segment IN ( " . implode( ",", array_fill( 0, count( $estimation_seg_ids ), '?' ) ) . " )

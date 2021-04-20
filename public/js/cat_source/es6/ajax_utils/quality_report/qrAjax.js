@@ -14,25 +14,30 @@ let QUALITY_REPORT =  {
             data: data,
             type: "GET",
             xhrFields: { withCredentials: true },
-            url : APP.getRandomUrl() + "api/v3/jobs/"+ config.id_job +"/" + config.password + "/quality-report/segments"
+            url : APP.getRandomUrl() + "api/app/jobs/"+ config.id_job +"/" + config.password + "/quality-report/segments"
         });
     },
 
-    getUserData() {
-        return $.ajax({
-            type: "GET",
-            xhrFields: { withCredentials: true },
-            url : APP.getRandomUrl() + 'api/app/user'
-        });
-    },
+  getUserData() {
+    return $.ajax({
+      type: 'GET',
+      xhrFields: {withCredentials: true},
+      url: APP.getRandomUrl() + 'api/app/user',
+    })
+  },
 
-    getQRinfo() {
-        return $.ajax({
-            type: "GET",
-            xhrFields: { withCredentials: true },
-            url : APP.getRandomUrl() +"api/v3/jobs/"+ config.id_job +"/" + config.password
-        });
-    }
-};
+  getQRinfo() {
+    return $.ajax({
+      type: 'GET',
+      xhrFields: {withCredentials: true},
+      url:
+        APP.getRandomUrl() +
+        'api/v3/jobs/' +
+        config.id_job +
+        '/' +
+        config.password,
+    })
+  },
+}
 
-export default QUALITY_REPORT ;
+export default QUALITY_REPORT

@@ -1,19 +1,18 @@
 class SegmentQRIssue extends React.Component {
-
-    generateHtmlCommentLines(issue){
-        let array = [];
-        let comments = issue.get('comments').toJS(),
-            comment_date;
-        for(let n in comments){
-            let comment = comments[n];
-            comment_date = moment(comment.create_date).format('lll');
+  generateHtmlCommentLines(issue) {
+    let array = []
+    let comments = issue.get('comments').toJS(),
+      comment_date
+    for (let n in comments) {
+      let comment = comments[n]
+      comment_date = moment(comment.create_date).format('lll')
 
             if(comment.source_page == 1){
-                array.push(<p key={comment.id} className="re-comment"><span className="re-translator">Translator </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.message}</p>)
+                array.push(<p key={comment.id} className="re-comment"><span className="re-translator">Translator </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.comment}</p>)
             } else if(comment.source_page == 2){
-                array.push(<p key={comment.id} className="re-comment"><span className="re-revisor">Reviewer </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.message}</p>)
+                array.push(<p key={comment.id} className="re-comment"><span className="re-revisor">Reviewer </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.comment}</p>)
             } else if(comment.source_page == 3){
-                array.push(<p key={comment.id} className="re-comment"><span className="re-revisor2">Reviewer </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.message}</p>)
+                array.push(<p key={comment.id} className="re-comment"><span className="re-revisor2">Reviewer </span><span className="re-comment-date"><i>({comment_date}): </i></span>{comment.comment}</p>)
             }
         }
         if(array.length > 0 ){
@@ -61,4 +60,4 @@ class SegmentQRIssue extends React.Component {
     }
 }
 
-export default SegmentQRIssue ;
+export default SegmentQRIssue

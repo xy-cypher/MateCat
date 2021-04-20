@@ -1,43 +1,50 @@
-import AppDispatcher  from './AppDispatcher';
-import {EventEmitter} from 'events';
-import assign  from 'object-assign';
-import Immutable  from 'immutable';
-import QRConstants from "../constants/QualityReportConstants";
+import AppDispatcher from './AppDispatcher'
+import {EventEmitter} from 'events'
+import assign from 'object-assign'
+import Immutable from 'immutable'
+import QRConstants from '../constants/QualityReportConstants'
 
-EventEmitter.prototype.setMaxListeners(0);
+EventEmitter.prototype.setMaxListeners(0)
 
 let QualityReportStore = assign({}, EventEmitter.prototype, {
 
     _segmentsFiles: Immutable.fromJS({}),
+    _files: Immutable.fromJS({}),
     _jobInfo: Immutable.fromJS({}),
-    storeSegments: function(files) {
-        this._segmentsFiles = Immutable.fromJS(files);
+    _lastSegment: null,
+    storeSegments: function(segmentsData) {
+        const files = {};
+        const segmentsFiles = {};
+        segmentsData.segments.forEach((segment)=> {
+            segmentsFiles[segment.file.id] ? segmentsFiles[segment.file.id].push(segment) : segmentsFiles[segment.file.id] = [segment]
+            files[segment.file.id] = segment.file
+        } );
+        this._segmentsFiles = Immutable.fromJS(segmentsFiles);
+        this._files = Immutable.fromJS(files);
+        this._lastSegment = segmentsData._links.last_segment_id
     },
 
-    storeJobInfo: function(job) {
-        this._jobInfo = Immutable.fromJS(job);
-    },
+  storeJobInfo: function (job) {
+    this._jobInfo = Immutable.fromJS(job)
+  },
 
-    addSegments: function ( files ) {
-        _.forEach(files, (file, key)=>{
-
-            if (this._segmentsFiles.get(key)) {
-                let immFiles = Immutable.fromJS(file.segments);
-                this._segmentsFiles = this._segmentsFiles.setIn([key, 'segments'], this._segmentsFiles.get(key).get('segments').push(...immFiles));
+    addSegments: function ( segmentsData ) {
+        _.forEach(segmentsData.segments, (segment)=>{
+            if (this._segmentsFiles.get(segment.file.id)) {
+                let immFiles = Immutable.fromJS(segment);
+                this._segmentsFiles = this._segmentsFiles.set(segment.file.id, this._segmentsFiles.get(segment.file.id).push(immFiles));
             } else {
-                this._segmentsFiles = this._segmentsFiles.set(key, Immutable.fromJS(file));
+                this._segmentsFiles = this._segmentsFiles.set(segment.file.id, Immutable.fromJS([segment]));
+                this._files = this._files.set(segment.file.id, Immutable.fromJS(segment.file));
             }
         });
-
-        // this._segmentsFiles = this._segmentsFiles.mergeDeep(immFiles);
+        this._lastSegment = segmentsData._links.last_segment_id
     },
 
-    emitChange: function(event, args) {
-        this.emit.apply(this, arguments);
-    }
-
-});
-
+  emitChange: function (event, args) {
+    this.emit.apply(this, arguments)
+  },
+})
 
 // Register callback to handle all updates
 AppDispatcher.register(function(action) {
@@ -45,11 +52,11 @@ AppDispatcher.register(function(action) {
     switch(action.actionType) {
         case QRConstants.RENDER_SEGMENTS:
             QualityReportStore.storeSegments(action.files);
-            QualityReportStore.emitChange(action.actionType, QualityReportStore._segmentsFiles);
+            QualityReportStore.emitChange(action.actionType, QualityReportStore._segmentsFiles, QualityReportStore._files, QualityReportStore._lastSegment);
             break;
-        case QRConstants.ADD_SEGMENTS:
+        case QRConstants.ADD_SEGMENTS_QR:
             QualityReportStore.addSegments(action.files);
-            QualityReportStore.emitChange(QRConstants.RENDER_SEGMENTS, QualityReportStore._segmentsFiles);
+            QualityReportStore.emitChange(QRConstants.RENDER_SEGMENTS, QualityReportStore._segmentsFiles, QualityReportStore._files, QualityReportStore._lastSegment);
             break;
         case QRConstants.RENDER_REPORT:
             QualityReportStore.storeJobInfo(action.job);
@@ -63,4 +70,4 @@ AppDispatcher.register(function(action) {
     }
 });
 
-export default QualityReportStore ;
+export default QualityReportStore

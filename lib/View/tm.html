@@ -93,7 +93,8 @@
                                         <tr tal:condition="php: key.edit || key.owner" tal:attributes="class php: key.owner ? ( jobOwnerIsMe ? 'mine' : 'ownergroup' ) : 'mine'" data-tm="${key/tm}" data-glos="${key/glos}" data-editable="${key/edit}" data-key="${key/key}" data-owner="${key/owner}">
                                             <td class="dragrow"><div class="status"></div></td>
                                             <td class="activate text-center check"><input type="checkbox" checked="checked" tal:attributes="disabled php: !key.edit || ( key.owner && !jobOwnerIsMe ); checked key/r"/></td>
-                                            <td class="lookup text-center check"><input type="checkbox" tal:attributes="disabled php: !key.edit || ( key.owner && !jobOwnerIsMe ); checked key/r" /></td>
+                                            <td
+                                                    class="lookup text-center check"><input type="checkbox" checked="checked"  /></td>
                                             <td class="update text-center check"><input type="checkbox" tal:attributes="disabled php: !key.edit || ( key.owner && !jobOwnerIsMe ); checked key/w" /></td>
                                             <td class="description">
                                                 <div class="edit-desc" data-descr="${php: key.owner ? ( jobOwnerIsMe || key.edit ? key.name : '**********' ) : key.name}">
@@ -455,7 +456,7 @@
                                     </span>
                                     <span class="option-tagp-revise">Not available in revise mode.<br/></span>
                                     Enable this functionality to let MateCat automatically place the tags where they belong.
-                                        <a class="tooltip-guess-tags" href="https://www.matecat.com/support/translating-projects/guess-tag-position/#gtp_lang" target="_blank">Supported languages</a>
+                                        <a class="tooltip-guess-tags" href="https://site.matecat.com/support/translating-projects/guess-tag-position/#gtp_lang" target="_blank">Supported languages</a>
                                 </p>
                                 <div class="onoffswitch-container">
                                     <div class="onoffswitch">
