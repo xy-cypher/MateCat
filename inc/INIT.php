@@ -338,7 +338,7 @@ class INIT {
                     'xltm' => [ '', '', 'extxls' ],
                     'ods'  => [ '', '', 'extxls' ],
                     'ots'  => [ '', '', 'extxls' ],
-                //'csv'  => array( '', '', 'extxls' ),
+                    'csv'  => [ '', '', 'extxls' ],
                     'tsv'  => [ '', '', 'extxls' ],
                     'key'  => [ '', '', 'extppt' ],
                     'ppt'  => [ '', '', 'extppt' ],

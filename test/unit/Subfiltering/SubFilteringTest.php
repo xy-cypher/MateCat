@@ -30,7 +30,7 @@ class SubFilteringTest extends AbstractTest {
         $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
         //$featureSet->loadFromString( "project_completion,translation_versions,qa_check_glossary,microsoft" );
 
-        $this->filter = Filter::getInstance( $featureSet );
+        $this->filter = Filter::getInstance( 'en-EN','it-IT', $featureSet );
 
     }
 
@@ -322,11 +322,8 @@ class SubFilteringTest extends AbstractTest {
         $segmentL2 = $this->filter->fromLayer0ToLayer2( $db_segment );
 
         $this->assertEquals( $segment_to_UI, $segmentL2 );
-
         $this->assertEquals( $db_segment, $this->filter->fromLayer1ToLayer0( $segment_from_UI ) );
-
         $this->assertEquals( $segmentL2, $this->filter->fromLayer1ToLayer2( $segment_from_UI ) );
-
         $this->assertEquals( $segment_from_UI, $this->filter->fromLayer0ToLayer1( $db_segment ) );
 
     }
@@ -361,19 +358,21 @@ class SubFilteringTest extends AbstractTest {
         $segmentL2 = $this->filter->fromLayer0ToLayer2( $db_segment );
 
         $this->assertEquals( $segment_to_UI, $segmentL2 );
-
         $this->assertEquals( $db_segment, $this->filter->fromLayer1ToLayer0( $segment_from_UI ) );
-
         $this->assertEquals( $segmentL2, $this->filter->fromLayer1ToLayer2( $segment_from_UI ) );
-
         $this->assertEquals( $segment_from_UI, $this->filter->fromLayer0ToLayer1( $db_segment ) );
-
     }
+
+    /**
+     **************************
+     * <ph> tags test (xliff 2.0)
+     **************************
+     */
 
     /**
      * @throws \Exception
      */
-    public function testSPlaceholderWithDataRef() {
+    public function testsPHPlaceholderWithDataRefForAirbnb() {
         $data_ref_map = [
                 'source3' => '&lt;/a&gt;',
                 'source4' => '&lt;br&gt;',
@@ -384,7 +383,7 @@ class SubFilteringTest extends AbstractTest {
 
         $featureSet = new FeatureSet();
         $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
-        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+        $Filter = \SubFiltering\Filter::getInstance( 'en-EN','et-ET', $featureSet, $data_ref_map );
 
         $db_segment     = "Hi %s .";
         $db_translation = "Tere %s .";
@@ -404,4 +403,140 @@ class SubFilteringTest extends AbstractTest {
         $this->assertEquals($l2_translation, $expected_l2_translation);
     }
 
+    /**
+     * @throws \Exception
+     */
+    public function testPHPlaceholderWithDataRef() {
+        $data_ref_map = [
+                'source1' => '&lt;br&gt;',
+        ];
+
+        $featureSet = new FeatureSet();
+        $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
+        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+
+        $db_segment     = 'Frase semplice: <ph id="source1" dataRef="source1"/>.';
+        $db_translation = 'Simple sentence: <ph id="source1" dataRef="source1"/>.';
+        $expected_l1_segment = 'Frase semplice: <ph id="source1" dataRef="source1"/>.';
+        $expected_l1_translation = 'Simple sentence: <ph id="source1" dataRef="source1"/>.';
+        $expected_l2_segment = 'Frase semplice: &lt;ph id="source1" dataRef="source1" equiv-text="base64:Jmx0O2JyJmd0Ow=="/&gt;.';
+        $expected_l2_translation = 'Simple sentence: &lt;ph id="source1" dataRef="source1" equiv-text="base64:Jmx0O2JyJmd0Ow=="/&gt;.';
+
+        $l1_segment     = $Filter->fromLayer0ToLayer1( $db_segment );
+        $l1_translation = $Filter->fromLayer0ToLayer1( $db_translation );
+        $l2_segment     = $Filter->fromLayer1ToLayer2( $l1_segment );
+        $l2_translation = $Filter->fromLayer1ToLayer2( $l1_translation );
+
+        $this->assertEquals($l1_segment, $expected_l1_segment);
+        $this->assertEquals($l1_translation, $expected_l1_translation);
+        $this->assertEquals($l2_segment, $expected_l2_segment);
+        $this->assertEquals($l2_translation, $expected_l2_translation);
+    }
+
+    /**
+     **************************
+     * <pc> tags test (xliff 2.0)
+     **************************
+     */
+
+    public function testPCWithFromRawXliffToLayer0() {
+        $data_ref_map = [
+            'd1' => '_',
+        ];
+
+        $featureSet = new FeatureSet();
+        $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
+        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+
+        $raw_segment = 'Testo libero contenente <pc id="1" canCopy="no" canDelete="no" dataRefEnd="d1" dataRefStart="d1">corsivo</pc>.';
+        $l1_segment     = $Filter->fromRawXliffToLayer0( $raw_segment );
+    }
+
+//    /**
+//     * @throws \Exception
+//     */
+//    public function testDoublePCPlaceholderWithDataRef() {
+//        $data_ref_map = [
+//                'd1' => '[',
+//                'd2' => '](http://repubblica.it)',
+//        ];
+//
+//        $featureSet = new FeatureSet();
+//        $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
+//        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+//
+//        $db_segment     = 'Link semplice: &lt;pc id="1" canCopy="no" canDelete="no" dataRefEnd="d2" dataRefStart="d1"&gt;La Repubblica&lt;/pc&gt;.';
+//        $db_translation = 'Simple link: &lt;pc id="1" canCopy="no" canDelete="no" dataRefEnd="d2" dataRefStart="d1"&gt;La Repubblica&lt;/pc&gt;.';
+//        $expected_l1_segment = 'Link semplice: <ph id="mtc_1" equiv-text="base64:Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow=="/>La Repubblica<ph id="mtc_2" equiv-text="base64:Jmx0Oy9wYyZndDs="/>.';
+//        $expected_l1_translation = 'Simple link: <ph id="mtc_1" equiv-text="base64:Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow=="/>La Repubblica<ph id="mtc_2" equiv-text="base64:Jmx0Oy9wYyZndDs="/>.';
+//        $expected_l2_segment = 'Link semplice: &lt;ph id="1_1" dataType="pcStart" originalData="Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow==" dataRef="d1" equiv-text="base64:Ww=="/&gt;La Repubblica&lt;ph id="1_2" dataType="pcEnd" originalData="Jmx0Oy9wYyZndDs=" dataRef="d2" equiv-text="base64:XShodHRwOi8vcmVwdWJibGljYS5pdCk="/&gt;.';
+//        $expected_l2_translation = 'Simple link: &lt;ph id="1_1" dataType="pcStart" originalData="Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow==" dataRef="d1" equiv-text="base64:Ww=="/&gt;La Repubblica&lt;ph id="1_2" dataType="pcEnd" originalData="Jmx0Oy9wYyZndDs=" dataRef="d2" equiv-text="base64:XShodHRwOi8vcmVwdWJibGljYS5pdCk="/&gt;.';
+//
+//        $l1_segment     = $Filter->fromLayer0ToLayer1( $db_segment );
+//        $l1_translation = $Filter->fromLayer0ToLayer1( $db_translation );
+//        $l2_segment     = $Filter->fromLayer1ToLayer2( $l1_segment );
+//        $l2_translation = $Filter->fromLayer1ToLayer2( $l1_translation );
+//
+//        $this->assertEquals($l1_segment, $expected_l1_segment);
+//        $this->assertEquals($l1_translation, $expected_l1_translation);
+//        $this->assertEquals($l2_segment, $expected_l2_segment);
+//        $this->assertEquals($l2_translation, $expected_l2_translation);
+//
+//        $back_to_db_segment = $Filter->fromLayer2ToLayer0( $l2_segment );
+//        $back_to_db_translation = $Filter->fromLayer2ToLayer0( $l2_translation );
+//
+//        $this->assertEquals($db_segment, $back_to_db_segment);
+//        $this->assertEquals($db_translation, $back_to_db_translation);
+//    }
+//
+//    public function testWithPCWithDataRefStand() {
+//
+//        $data_ref_map = [
+//                'd1' => '_',
+//                'd2' => '**',
+//                'd3' => '`',
+//        ];
+//
+//        $featureSet = new FeatureSet();
+//        $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
+//        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+//
+//        $expected_db_translation = 'Testo libero contenente &lt;pc id="1" canCopy="no" canDelete="no" dataRefEnd="d1" dataRefStart="d1"&gt;corsivo&lt;/pc&gt;';
+//        $l2_translation = 'Testo libero contenente <ph id="1_1" dataType="pcStart" originalData="Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDEiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow==" dataRef="d1" equiv-text="base64:Xw=="/>corsivo<ph id="1_2" dataType="pcEnd" originalData="Jmx0Oy9wYyZndDs=" dataRef="d1" equiv-text="base64:Xw=="/>';
+//
+//        $db_translation = $Filter->fromLayer2ToLayer0( $l2_translation );
+//
+//        $this->assertEquals($db_translation, $expected_db_translation);
+//    }
+//
+//    /**
+//     * @throws \Exception
+//     */
+//    public function testWithPCWithAndWithoutDataRef() {
+//
+//        $data_ref_map = [
+//                'source1' => '&lt;w:hyperlink r:id="rId6"&gt;&lt;/w:hyperlink&gt;',
+//        ];
+//
+//        $featureSet = new FeatureSet();
+//        $featureSet->loadFromString( "translation_versions,review_extended,mmt,airbnb" );
+//        $Filter = \SubFiltering\Filter::getInstance( $featureSet, $data_ref_map );
+//
+//        $db_segment = 'This code of conduct sets forth the minimum standards by which Uber’s Driver Partners must adhere when using the Uber app in Czech Republic, in addition to the terms of their services agreement with Uber and the &lt;pc id="source1" dataRefStart="source1" dataRefEnd="source1"&gt;&lt;pc id="1u" type="fmt" subType="m:u"&gt;Uber Community Guidelines&lt;/pc&gt;&lt;/pc&gt;.';
+//        $db_translation = 'Este código de conduta estabelece os padrões mínimos pelos quais os Motoristas Parceiros da Uber devem aderir ao usar o aplicativo Uber na República Tcheca, além dos termos de seu contrato de serviços com a Uber e as &lt;pc id="source1" dataRefStart="source1" dataRefEnd="source1"&gt;&lt;pc id="1u" type="fmt" subType="m:u"&gt;Diretrizes da Comunidade Uber&lt;/pc&gt;&lt;/pc&gt;.';
+//        $expected_l1_segment = 'This code of conduct sets forth the minimum standards by which Uber’s Driver Partners must adhere when using the Uber app in Czech Republic, in addition to the terms of their services agreement with Uber and the <ph id="mtc_1" equiv-text="base64:Jmx0O3BjIGlkPSJzb3VyY2UxIiBkYXRhUmVmU3RhcnQ9InNvdXJjZTEiIGRhdGFSZWZFbmQ9InNvdXJjZTEiJmd0Ow=="/><ph id="mtc_2" equiv-text="base64:Jmx0O3BjIGlkPSIxdSIgdHlwZT0iZm10IiBzdWJUeXBlPSJtOnUiJmd0Ow=="/>Uber Community Guidelines<ph id="mtc_3" equiv-text="base64:Jmx0Oy9wYyZndDs="/><ph id="mtc_4" equiv-text="base64:Jmx0Oy9wYyZndDs="/>.';
+//        $expected_l1_translation = 'Este código de conduta estabelece os padrões mínimos pelos quais os Motoristas Parceiros da Uber devem aderir ao usar o aplicativo Uber na República Tcheca, além dos termos de seu contrato de serviços com a Uber e as <ph id="mtc_1" equiv-text="base64:Jmx0O3BjIGlkPSJzb3VyY2UxIiBkYXRhUmVmU3RhcnQ9InNvdXJjZTEiIGRhdGFSZWZFbmQ9InNvdXJjZTEiJmd0Ow=="/><ph id="mtc_2" equiv-text="base64:Jmx0O3BjIGlkPSIxdSIgdHlwZT0iZm10IiBzdWJUeXBlPSJtOnUiJmd0Ow=="/>Diretrizes da Comunidade Uber<ph id="mtc_3" equiv-text="base64:Jmx0Oy9wYyZndDs="/><ph id="mtc_4" equiv-text="base64:Jmx0Oy9wYyZndDs="/>.';
+//        $expected_l2_segment = 'This code of conduct sets forth the minimum standards by which Uber’s Driver Partners must adhere when using the Uber app in Czech Republic, in addition to the terms of their services agreement with Uber and the &lt;ph id="source1_1" dataType="pcStart" originalData="Jmx0O3BjIGlkPSJzb3VyY2UxIiBkYXRhUmVmU3RhcnQ9InNvdXJjZTEiIGRhdGFSZWZFbmQ9InNvdXJjZTEiJmd0Ow==" dataRef="source1" equiv-text="base64:Jmx0O3c6aHlwZXJsaW5rIHI6aWQ9InJJZDYiJmd0OyZsdDsvdzpoeXBlcmxpbmsmZ3Q7"/&gt;&lt;ph id="mtc_2" equiv-text="base64:Jmx0O3BjIGlkPSIxdSIgdHlwZT0iZm10IiBzdWJUeXBlPSJtOnUiJmd0Ow=="/&gt;Uber Community Guidelines&lt;ph id="mtc_3" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;&lt;ph id="source1_2" dataType="pcEnd" originalData="Jmx0Oy9wYyZndDs=" dataRef="source1" equiv-text="base64:Jmx0O3c6aHlwZXJsaW5rIHI6aWQ9InJJZDYiJmd0OyZsdDsvdzpoeXBlcmxpbmsmZ3Q7"/&gt;.';
+//        $expected_l2_translation = 'Este código de conduta estabelece os padrões mínimos pelos quais os Motoristas Parceiros da Uber devem aderir ao usar o aplicativo Uber na República Tcheca, além dos termos de seu contrato de serviços com a Uber e as &lt;ph id="source1_1" dataType="pcStart" originalData="Jmx0O3BjIGlkPSJzb3VyY2UxIiBkYXRhUmVmU3RhcnQ9InNvdXJjZTEiIGRhdGFSZWZFbmQ9InNvdXJjZTEiJmd0Ow==" dataRef="source1" equiv-text="base64:Jmx0O3c6aHlwZXJsaW5rIHI6aWQ9InJJZDYiJmd0OyZsdDsvdzpoeXBlcmxpbmsmZ3Q7"/&gt;&lt;ph id="mtc_2" equiv-text="base64:Jmx0O3BjIGlkPSIxdSIgdHlwZT0iZm10IiBzdWJUeXBlPSJtOnUiJmd0Ow=="/&gt;Diretrizes da Comunidade Uber&lt;ph id="mtc_3" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;&lt;ph id="source1_2" dataType="pcEnd" originalData="Jmx0Oy9wYyZndDs=" dataRef="source1" equiv-text="base64:Jmx0O3c6aHlwZXJsaW5rIHI6aWQ9InJJZDYiJmd0OyZsdDsvdzpoeXBlcmxpbmsmZ3Q7"/&gt;.';
+//
+//        $l1_segment     = $Filter->fromLayer0ToLayer1( $db_segment );
+//        $l1_translation = $Filter->fromLayer0ToLayer1( $db_translation );
+//        $l2_segment     = $Filter->fromLayer1ToLayer2( $l1_segment );
+//        $l2_translation = $Filter->fromLayer1ToLayer2( $l1_translation );
+//
+//        $this->assertEquals($l1_segment, $expected_l1_segment);
+//        $this->assertEquals($l1_translation, $expected_l1_translation);
+//        $this->assertEquals($l2_segment, $expected_l2_segment);
+//        $this->assertEquals($l2_translation, $expected_l2_translation);
+//    }
 }
