@@ -94,16 +94,20 @@ class QualityReportSegmentModel {
      * @throws \Exception
      */
     protected function _commonSegmentAssignments( QualityReport_QualityReportSegmentStruct $seg, Filter $Filter, $isForUI = false ) {
-        $seg->warnings            = $seg->getLocalWarning();
+
+        // original Filter instance containing the correct DataRefMap
+        $originalFilterInstance = clone $Filter;
+
+        $seg->warnings            = $seg->getLocalWarning(); // this method instantiates a new Filter instance and this overrides $Filter
         $seg->pee                 = $seg->getPEE();
         $seg->ice_modified        = $seg->isICEModified();
         $seg->secs_per_word       = $seg->getSecsPerWord();
         $seg->parsed_time_to_edit = CatUtils::parse_time_to_edit( $seg->time_to_edit );
 
         if($isForUI){
-            $seg->segment             = $Filter->fromLayer0ToLayer2( $seg->segment );
-            $seg->translation         = $Filter->fromLayer0ToLayer2( $seg->translation );
-            $seg->suggestion          = $Filter->fromLayer0ToLayer2( $seg->suggestion );
+            $seg->segment             = $originalFilterInstance->fromLayer0ToLayer2( $seg->segment );
+            $seg->translation         = $originalFilterInstance->fromLayer0ToLayer2( $seg->translation );
+            $seg->suggestion          = $originalFilterInstance->fromLayer0ToLayer2( $seg->suggestion );
         }
     }
 
