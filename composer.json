@@ -20,6 +20,6 @@
         "symfony/console": "^2.8",
         "symfony/filesystem": "^2.8.9",
         "defuse/php-encryption": "2.0.*",
-        "google/cloud-translate": "^1.10"
+        "matecat/subfiltering": "^1.0"
     }
 }

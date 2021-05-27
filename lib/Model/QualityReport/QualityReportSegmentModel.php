@@ -25,7 +25,7 @@ use LQA\EntryCommentDao;
 use QualityReport_QualityReportSegmentStruct;
 use Revise_ReviseDAO;
 use Segments_SegmentDao;
-use SubFiltering\Filter;
+use Matecat\SubFiltering\MateCatFilter;
 use ZipArchiveExtended;
 
 class QualityReportSegmentModel {
@@ -88,17 +88,17 @@ class QualityReportSegmentModel {
 
     /**
      * @param QualityReport_QualityReportSegmentStruct $seg
-     * @param Filter                                   $Filter
+     * @param MateCatFilter                                   $Filter
      * @param bool                                     $isForUI
      *
      * @throws \Exception
      */
-    protected function _commonSegmentAssignments( QualityReport_QualityReportSegmentStruct $seg, Filter $Filter, $isForUI = false ) {
+    protected function _commonSegmentAssignments( QualityReport_QualityReportSegmentStruct $seg, MateCatFilter $Filter, $isForUI = false ) {
 
         // original Filter instance containing the correct DataRefMap
         $originalFilterInstance = clone $Filter;
 
-        $seg->warnings            = $seg->getLocalWarning(); // this method instantiates a new Filter instance and this overrides $Filter
+        $seg->warnings            = $seg->getLocalWarning();
         $seg->pee                 = $seg->getPEE();
         $seg->ice_modified        = $seg->isICEModified();
         $seg->secs_per_word       = $seg->getSecsPerWord();
@@ -206,7 +206,9 @@ class QualityReportSegmentModel {
         foreach ( $data as $index => $seg ) {
 
             $dataRefMap = \Segments_SegmentOriginalDataDao::getSegmentDataRefMap($seg->sid);
-            $Filter = Filter::getInstance( $this->chunk->source, $this->chunk->target, $featureSet, $dataRefMap );
+
+            /** @var MateCatFilter $Filter */
+            $Filter = MateCatFilter::getInstance( $featureSet, $this->chunk->source, $this->chunk->target, $dataRefMap );
 
             $seg->dataRefMap = $dataRefMap;
 
@@ -393,8 +395,10 @@ class QualityReportSegmentModel {
      * @param $Filter
      * @param $last_revisions
      * @param $codes
+     *
+     * @throws \Exception
      */
-    protected function _populateLastTranslationAndRevision( $seg, Filter $Filter, $last_translations, $last_revisions, $codes ) {
+    protected function _populateLastTranslationAndRevision( $seg, MateCatFilter $Filter, $last_translations, $last_revisions, $codes ) {
         $last_translation = $this->_findLastTransaltion( $seg, $Filter, $last_translations );
 
         // last revision version object
@@ -433,12 +437,12 @@ class QualityReportSegmentModel {
 
     /**
      * @param        $seg
-     * @param Filter $Filter
+     * @param MateCatFilter $Filter
      * @param        $last_translations
      *
      * @return null
      */
-    protected function _findLastTransaltion( $seg, Filter $Filter, $last_translations ) {
+    protected function _findLastTransaltion( $seg, MateCatFilter $Filter, $last_translations ) {
         $find_last_translation_version = null;
         if ( isset( $last_translations ) && !empty( $last_translations ) ) {
             foreach ( $last_translations as $last_translation ) {
@@ -454,13 +458,14 @@ class QualityReportSegmentModel {
     }
 
     /**
-     * @param        $seg
-     * @param Filter $Filter
-     * @param        $last_revisions
+     * @param               $seg
+     * @param MateCatFilter $Filter
+     * @param               $last_revisions
      *
      * @return null
+     * @throws \Exception
      */
-    protected function _findLastRevision( $seg, Filter $Filter, $last_revisions ) {
+    protected function _findLastRevision( $seg, MateCatFilter $Filter, $last_revisions ) {
         $segment_last_revisions = [];
 
         if ( !empty( $last_revisions ) ) {
